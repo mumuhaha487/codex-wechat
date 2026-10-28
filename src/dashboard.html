@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Codex 微信连接</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f8f6;color:#17251d;font:16px/1.6 system-ui,"Microsoft YaHei",sans-serif}main{max-width:620px;margin:7vh auto;padding:32px;background:#fff;border:1px solid #e1e8e2;border-radius:24px;box-shadow:0 18px 60px #173c1610}h1{font-size:30px;letter-spacing:-1px;margin:6px 0 12px}.eyebrow{font-size:12px;letter-spacing:2px;color:#24894c;font-weight:700}.muted{color:#647369}#state{display:inline-flex;align-items:center;gap:8px;background:#f0f6f1;border-radius:20px;padding:5px 12px;font-size:14px}#state:before{content:"";width:8px;height:8px;border-radius:50%;background:#82a18b}#state.connected:before{background:#23ad50}#qr{width:min(100%,300px);display:block;margin:auto}#qrbox{text-align:center;padding:16px 0}button{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:10px;background:#168942;color:white;padding:11px 20px}button:disabled{opacity:.5;cursor:wait}.secondary{background:#edf2ee;color:#344c3c}#buttons{display:flex;gap:10px;flex-wrap:wrap}dl{background:#f7f9f7;border-radius:14px;padding:18px;margin:24px 0}dt{font-size:13px;color:#647369}dd{margin:3px 0 14px;overflow-wrap:anywhere}dd:last-child{margin-bottom:0}input{font:inherit;border:1px solid #ccd9ce;border-radius:8px;padding:10px;max-width:180px}#error{color:#ab392f;white-space:pre-wrap}#verify{padding:10px 0 20px}footer{margin-top:24px;font-size:13px;color:#647369}@media(max-width:660px){main{margin:20px 12px;padding:24px}}
+</style>
+<main>
+<div class="eyebrow">CODEX · WECHAT</div>
+<h1>从微信，继续对话。</h1>
+<p class="muted">用微信扫码并确认连接，即可询问 Codex，阅读和分析本机项目中的文件。</p>
+<span id="state">正在检查连接</span>
+<div id="qrbox" hidden><img id="qr" alt="请用微信扫描此二维码"><p id="qrhint" class="muted">打开微信扫一扫，扫描并确认连接。</p></div>
+<div id="verify" hidden><p>请输入手机微信显示的数字验证码。</p><input id="code" inputmode="numeric" autocomplete="one-time-code" aria-label="微信验证码"><button id="submitcode">确认</button></div>
+<dl><dt>工作目录</dt><dd id="workspace">—</dd><dt>文件权限</dt><dd>读取目录中的所有文件，包含子目录和隐藏文件</dd><dt>微信对话</dt><dd id="activity">扫码后即可开始</dd></dl>
+<p id="error" role="alert"></p>
+<div id="buttons"><button id="login">生成登录二维码</button><button id="disconnect" class="secondary" hidden>断开连接</button></div>
+<footer>仅接受扫码账号的消息。发送 <b>/new</b> 开始新对话，发送 <b>/status</b> 查看状态。保持本机开机和连接服务运行。</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const fragment=location.hash.slice(1);
+if(fragment){sessionStorage.setItem('codex-wechat-token',fragment);history.replaceState(null,'',location.pathname)}
+const token=sessionStorage.getItem('codex-wechat-token');
+let qrLoaded=false;
+async function api(route,body){const r=await fetch('/api/'+route,{method:body===undefined?'GET':'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const result=await r.json();if(!r.ok)throw Error(result.error||'连接失败');return result}
+async function refresh(){try{const s=await api('status');$('workspace').textContent=s.workspace;$('state').textContent=s.connected?'微信已连接':({scaned:'已扫码，请在微信确认',need_verifycode:'请输入微信验证码',expired:'二维码已过期',verify_code_blocked:'验证受限，请刷新二维码',error:'登录失败'}[s.loginStatus]||'等待连接');$('state').className=s.connected?'connected':'';$('disconnect').hidden=!s.connected;$('login').hidden=s.connected;$('verify').hidden=s.loginStatus!=='need_verifycode';$('activity').textContent=s.busy?'Codex 正在处理你的消息…':s.lastRepliedAt?'最近回复：'+new Date(s.lastRepliedAt).toLocaleString():s.connected?'已就绪，去微信发一条消息吧':'扫码后即可开始';$('error').textContent=s.error||'';if(s.connected){$('qrbox').hidden=true;qrLoaded=false}else if(s.loginStatus&&!qrLoaded){const q=await api('qr');if(q.qr)showQr(q.qr)}if(['expired','verify_code_blocked','error'].includes(s.loginStatus)){$('qrbox').hidden=true;qrLoaded=false;$('login').textContent='重新生成二维码'}}catch(e){$('error').textContent=e.message}}
+function showQr(qr){$('qr').src='data:image/png;base64,'+qr;$('qrbox').hidden=false;qrLoaded=true}
+$('login').onclick=async()=>{$('login').disabled=true;$('error').textContent='';try{const r=await api('login',{});if(r.qr)showQr(r.qr);await refresh()}catch(e){$('error').textContent=e.message}finally{$('login').disabled=false}};
+$('submitcode').onclick=async()=>{try{await api('verify',{code:$('code').value.trim()});$('code').value='';$('verify').hidden=true}catch(e){$('error').textContent=e.message}};
+$('disconnect').onclick=async()=>{try{await api('disconnect',{});$('qrbox').hidden=true;qrLoaded=false;await refresh()}catch(e){$('error').textContent=e.message}};
+refresh();setInterval(refresh,2000);
+</script>
+</html>

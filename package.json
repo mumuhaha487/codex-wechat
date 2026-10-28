@@ -1,0 +1,23 @@
+{
+  "name": "codex-wechat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Codex desktop plugin: connect WeChat with QR login and chat about your local workspace.",
+  "license": "MIT",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "start": "node plugins/codex-wechat/dist/cli.cjs start",
+    "login": "node plugins/codex-wechat/dist/cli.cjs login",
+    "status": "node plugins/codex-wechat/dist/cli.cjs status",
+    "stop": "node plugins/codex-wechat/dist/cli.cjs stop"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "qrcode": "^1.5.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": { "esbuild": "^0.25.0" }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codex-wechat",
+  "version": "1.0.0",
+  "description": "微信扫码连接 Codex，使用微信与本地工作目录对话。支持递归列出及读取目录中的文件。",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "author": { "name": "mumuhaha487" },
+      "homepage": "https://github.com/mumuhaha487/codex-wechat",
+      "repository": "https://github.com/mumuhaha487/codex-wechat",
+      "interface": {
+        "displayName": "Codex 微信",
+        "shortDescription": "扫码连接微信，与 Codex 聊天并读取本地项目文件",
+        "longDescription": "通过本机扫码页面连接微信，自动接收当前账号的消息，并交给只读 Codex 会话处理。支持连续对话、查看连接状态、递归列出文件和分页读取文本或二进制文件。需要 Node.js 22.13 或更新版本和已登录的 Codex CLI。",
+        "developerName": "mumuhaha487",
+        "category": "Productivity"
+      }
+    }
+  }
+}

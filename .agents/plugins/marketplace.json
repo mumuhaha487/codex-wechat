@@ -1,0 +1,10 @@
+{
+  "name": "codex-wechat",
+  "interface": { "displayName": "Codex 微信" },
+  "plugins": [{
+    "name": "codex-wechat",
+    "source": { "source": "local", "path": "./plugins/codex-wechat" },
+    "policy": { "installation": "AVAILABLE", "authentication": "ON_USE" },
+    "category": "Productivity"
+  }]
+}
